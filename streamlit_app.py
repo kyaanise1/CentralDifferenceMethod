@@ -1,49 +1,100 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
-# Central Difference Method Function
-def central_difference(f, x, h):
-    return (f(x + h) - f(x - h)) / (2 * h)
+st.set_page_config(page_title="Central Difference Method Calculator", layout="centered")
 
-# Streamlit App
-st.title("Central Difference Method Calculator")
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #FFF3F2;
+        padding: 2rem 4rem 4rem 4rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.write("This app estimates the derivative of a function using the Central Difference Method.")
+st.title("🧮 Central Difference Method Calculator")
+st.write("Estimate the derivative of a function using the Central Difference Method.")
 
-# User Inputs
-function_str = st.text_input("Enter the function f(x):", "np.sin(x)")
-x_val = st.number_input("Enter the point x at which to differentiate:", value=1.0)
-h = st.number_input("Enter the step size h:", value=0.01)
-exact_derivative_str = st.text_input("(Optional) Enter the exact derivative f'(x):", "np.cos(x)")
+# Function input
+func_str = st.text_input("Enter the function f(x):", "sin(x)")
 
-# Evaluate function
-try:
-    f = lambda x: eval(function_str)
-    df_exact = lambda x: eval(exact_derivative_str) if exact_derivative_str else None
+# Unit selection
+unit = st.radio("Select the unit of x:", ("Radians", "Degrees"))
 
-    derivative = central_difference(f, x_val, h)
+# Point input
+x_val_input = st.text_input("Enter the point x (e.g., pi/2, 1.57, 180):", "pi/2")
 
-    st.subheader("Result")
-    st.write(f"Estimated derivative at x = {x_val} is: **{derivative:.6f}**")
+# Step size input
+h = st.number_input("Enter the step size h:", min_value=1e-6, max_value=1.0, value=0.01, format="%.5f")
 
-    if exact_derivative_str:
-        exact = df_exact(x_val)
-        error = abs(derivative - exact)
-        st.write(f"Exact derivative: **{exact:.6f}**")
-        st.write(f"Absolute Error: **{error:.6e}**")
+# Parse and prepare function safely
+def parse_function(func_str):
+    # Allowed names for eval
+    allowed_names = {
+        k: v for k, v in math.__dict__.items() if not k.startswith("__")
+    }
+    allowed_names['x'] = 0  # placeholder
 
-    # Visualization
-    st.subheader("Visualization")
-    x_vals = np.linspace(x_val - 5*h, x_val + 5*h, 100)
-    y_vals = f(x_vals)
+    def f(x):
+        allowed_names['x'] = x
+        try:
+            return eval(func_str, {"__builtins__": {}}, allowed_names)
+        except Exception as e:
+            st.error(f"Error evaluating function: {e}")
+            return None
+    return f
 
-    fig, ax = plt.subplots()
-    ax.plot(x_vals, y_vals, label='f(x)')
-    ax.plot(x_val, f(x_val), 'ro', label='x')
-    ax.set_title("Function Plot")
+f = parse_function(func_str)
+
+# Parse x input (allow pi, fractions like pi/2)
+def parse_x(x_str):
+    try:
+        # Replace pi with math.pi, handle fractions
+        x_str = x_str.replace("pi", f"{math.pi}")
+        return float(eval(x_str, {"__builtins__": {}}, {}))
+    except Exception as e:
+        st.error(f"Error parsing x input: {e}")
+        return None
+
+x_val = parse_x(x_val_input)
+
+if x_val is not None and f(x_val) is not None:
+    # Convert degrees to radians if needed
+    if unit == "Degrees":
+        x_val = math.radians(x_val)
+
+    # Central difference method for derivative
+    derivative = (f(x_val + h) - f(x_val - h)) / (2 * h)
+
+    st.subheader("📊 Result")
+    st.write(f"Estimated derivative at x = {x_val_input} ({unit}):")
+    st.write(f"f'(x) ≈ {derivative:.6f}")
+
+    # Plot function around x=0, range -2 to 2
+    x_vals = np.linspace(-2, 2, 400)
+    y_vals = np.array([f(x) for x in x_vals])
+
+    fig, ax = plt.subplots(figsize=(6, 4))  # smaller figure size
+
+    ax.plot(x_vals, y_vals, label="f(x)")
+    # Highlight the input point, converting back to original units for label
+    if unit == "Degrees":
+        x_val_plot = x_val  # plotted in radians, no conversion
+    else:
+        x_val_plot = x_val
+    ax.plot(x_val_plot, f(x_val_plot), 'ro', label=f"x = {x_val_input}")
+
+    ax.axvline(0, color='gray', linestyle='--', linewidth=0.8)
+
+    ax.set_title("Function Around x = 0")
+    ax.set_xlabel("x")
+    ax.set_ylabel("f(x)")
     ax.legend()
     st.pyplot(fig)
-
-except Exception as e:
-    st.error(f"Error evaluating function: {e}")
+else:
+    st.info("Please enter a valid function and point x to see the derivative and plot.")

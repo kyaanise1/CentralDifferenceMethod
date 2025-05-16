@@ -1,19 +1,11 @@
-# 🎈 Blank app template
-
-A simple Streamlit app template for you to modify!
-
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
-
 ### How to run it on your own machine
+# Central Difference Method Calculator
 
-1. Install the requirements
+This Streamlit web app estimates the derivative of a function at a given point using the **Central Difference Method** and compares it with the **symbolic derivative**.
 
-   ```
-   $ pip install -r requirements.txt
-   ```
+---
 
-2. Run the app
+## 🧠 Method Overview
 
-   ```
-   $ streamlit run streamlit_app.py
-   ```
+The **Central Difference Method** approximates the derivative of a function `f(x)` at a point `x` using:
+
