@@ -7,7 +7,7 @@ import math
 # Set the layout to wide to expand the app horizontally
 st.set_page_config(layout="wide")
 
-# Inject custom CSS for background color
+# Inject custom CSS for background color and white input boxes
 st.markdown(
     """
     <style>
@@ -16,6 +16,16 @@ st.markdown(
         }
         .stApp {
             background-color: #FFF3F2;
+        }
+        /* Make input widgets white */
+        .stTextInput input,
+        .stNumberInput input,
+        .stRadio div[role="radiogroup"] > label {
+            background-color: white !important;
+        }
+        /* For Streamlit >= 1.18 where containers are used */
+        .element-container input {
+            background-color: white !important;
         }
     </style>
     """,
