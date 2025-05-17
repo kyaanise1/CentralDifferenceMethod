@@ -71,8 +71,7 @@ def central_difference(f, x, h):
 
 # INPUTS with blank defaults
 function_str = st.text_input("Enter the function f(x):", value="")
-x_unit = st.radio("Select the unit of x:", ["Radians", "Degrees"], horizontal=True)
-x_val_str = st.text_input("Enter the point x (e.g., pi/2, 1.57, 180):", value="")
+x_val_str = st.text_input("Enter the point x (e.g., pi/2, 1.57, 3):", value="")
 h = st.number_input("Enter the step size h:", value=0.0, format="%.5f")
 
 if function_str.strip() and x_val_str.strip():
@@ -82,9 +81,9 @@ if function_str.strip() and x_val_str.strip():
 
     try:
         x_val_input = eval(x_val_str, {"np": np, "math": math, "pi": np.pi})
-        x_val = np.radians(x_val_input) if x_unit == "Degrees" else x_val_input
+        x_val = x_val_input
     except:
-        st.error("❌ Invalid input for x. Try expressions like `pi`, `3*pi/2`, or `180`.")
+        st.error("❌ Invalid input for x. Try expressions like `pi`, `3*pi/2`, or `3`.")
         st.stop()
 
     x_sym = sp.Symbol("x")
@@ -109,8 +108,8 @@ if function_str.strip() and x_val_str.strip():
 
         st.write(f"**Function**: $f(x) = {sp.latex(f_sym)}$")
         st.write(f"**Symbolic derivative**: $f'(x) = {sp.latex(f_prime_sym)}$")
-        st.write(f"**Estimated derivative at x = {x_val_input} ({x_unit}) using Central Difference:** `{derivative:.6f}`")
-        st.write(f"**Exact derivative at x = {x_val_input} ({x_unit}):** `{exact:.6f}`")
+        st.write(f"**Estimated derivative at x = {x_val_input} using Central Difference:** `{derivative:.6f}`")
+        st.write(f"**Exact derivative at x = {x_val_input}:** `{exact:.6f}`")
         st.write(f"**Absolute error**: `{error:.6e}`")
 
         plot_img = get_image_base64(img_assets["plot"]["path"])
@@ -131,7 +130,6 @@ if function_str.strip() and x_val_str.strip():
         ax.plot(x_vals, y_vals, label="f(x)", linewidth=2)
         ax.plot(x_vals, tangent_line, 'r--', label="Central Diff Tangent", linewidth=1.8)
         ax.plot(x_val, y0, 'ro', label=f"x = {x_val_input}")
-        # Removed vertical line at x = 0
 
         ax.set_title("Function and Tangent Line at x")
         ax.set_xlabel("x")

@@ -65,35 +65,33 @@ This will open the application in your browser.
 ## ✅ Sample Inputs & Expected Outputs
 
 ### Example 1:
-- **Function**: `sin(x)`
+- **Function**: `cos(4*x)`
 - **Unit**: Radians
-- **x**: `pi/4`
+- **x**: `pi/6`
 - **h**: `0.01`
 
 **Expected Output**:
-- Central Difference Estimate: ~0.7071  
-- Exact Derivative: ~0.7071  
-- Absolute Error: ~1e-7
+- Central Difference Estimate: ~-3.46318  
+- Exact Derivative: ~-3.46410  
+- Absolute Error: ~9.236865e-04 or 0.00092
 
 ---
 
 ### Example 2:
-- **Function**: `x**2 + 3*x + 2`
-- **Unit**: Degrees
-- **x**: `45`
-- **h**: `0.01`
+- **Function**: `2*x**3 + x**2 - 4`
+- **x**: `2.5`
+- **h**: `0.5`
 
 **Expected Output**:
-- Central Difference Estimate: ~4.3702  
-- Exact Derivative: ~4.3702  
-- Absolute Error: Near zero
+- Central Difference Estimate: ~43.000000  
+- Exact Derivative: ~42.500  
+- Absolute Error: ~5.000000e-01 or 0.500000
 
 ---
 
 ## 📁 Submission Contents
 
 - `app.py` — Main Streamlit application
-- `images/` — Automatically populated image directory (icons for UI)
 - `README.md` — This file
 
 ---
