@@ -77,5 +77,4 @@ This will open the app in your default web browser.
 ## 📁 Submission Contents
 
 - `app.py`: Streamlit application
-- `images/`: Folder containing required image assets (downloaded at runtime)
 - `README.md`: This file
