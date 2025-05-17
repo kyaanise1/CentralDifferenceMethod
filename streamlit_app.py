@@ -3,11 +3,37 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
 import math
+import os
+import requests
+import base64
 
-# Set the layout to wide to expand the app horizontally
 st.set_page_config(layout="wide")
 
-# Inject custom CSS for background color and white input boxes
+img_assets = {
+    "title": {
+        "url": "https://thumbs.dreamstime.com/b/pink-calculator-illustration-vector-white-background-v-260375892.jpg",
+        "path": "images/calculator.jpg"
+    },
+    "results": {
+        "url": "https://cdn-icons-png.flaticon.com/512/17480/17480789.png",
+        "path": "images/results.png"
+    },
+    "plot": {
+        "url": "https://images.vexels.com/media/users/3/199956/isolated/preview/c82c099cfab6cb2fd755610dbc6262ca-growing-graph-icon-stroke-pink.png",
+        "path": "images/plot.png"
+    }
+}
+
+os.makedirs("images", exist_ok=True)
+for key, val in img_assets.items():
+    if not os.path.isfile(val["path"]):
+        with open(val["path"], "wb") as f:
+            f.write(requests.get(val["url"]).content)
+
+def get_image_base64(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
 st.markdown(
     """
     <style>
@@ -17,13 +43,11 @@ st.markdown(
         .stApp {
             background-color: #FFF3F2;
         }
-        /* Make input widgets white */
         .stTextInput input,
         .stNumberInput input,
         .stRadio div[role="radiogroup"] > label {
             background-color: white !important;
         }
-        /* For Streamlit >= 1.18 where containers are used */
         .element-container input {
             background-color: white !important;
         }
@@ -32,78 +56,86 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Central Difference Method
+title_img = get_image_base64(img_assets["title"]["path"])
+st.markdown(f"""
+<div style="display: flex; align-items: center; gap: 12px;">
+    <img src="data:image/jpeg;base64,{title_img}" width="50">
+    <h2 style="margin: 0;"><strong>Central Difference Method Calculator</strong></h2>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("Estimate the derivative of a function using the Central Difference Method.")
+
 def central_difference(f, x, h):
     return (f(x + h) - f(x - h)) / (2 * h)
 
-# Streamlit App Title
-st.title("🧮 Central Difference Method Calculator")
-st.markdown("Estimate the derivative of a function using the Central Difference Method.")
-
-# Function input
-function_str = st.text_input("Enter the function f(x):", value="sin(x)")
-
-# Unit selection for x
+# INPUTS with blank defaults
+function_str = st.text_input("Enter the function f(x):", value="")
 x_unit = st.radio("Select the unit of x:", ["Radians", "Degrees"], horizontal=True)
-
-# x input as text for expressions like pi/2, np.pi
-x_val_str = st.text_input("Enter the point x (e.g., pi/2, 1.57, 180):", value="pi/2")
-
-# Step size
+x_val_str = st.text_input("Enter the point x (e.g., pi/2, 1.57, 180):", value="")
 h = st.number_input("Enter the step size h:", value=0.01, format="%.5f")
 
-try:
-    # Parse x input
-    x_val_input = eval(x_val_str, {"np": np, "math": math, "pi": np.pi})
-    x_val = np.radians(x_val_input) if x_unit == "Degrees" else x_val_input
-except:
-    st.error("❌ Invalid input for x. Try using expressions like `pi`, `3*pi/2`, or `180`.")
-    st.stop()
+if function_str.strip() and x_val_str.strip():
+    try:
+        x_val_input = eval(x_val_str, {"np": np, "math": math, "pi": np.pi})
+        x_val = np.radians(x_val_input) if x_unit == "Degrees" else x_val_input
+    except:
+        st.error("❌ Invalid input for x. Try expressions like `pi`, `3*pi/2`, or `180`.")
+        st.stop()
 
-# Symbolic computation with sympy
-x_sym = sp.Symbol("x")
-try:
-    f_sym = sp.sympify(function_str)
-    f_prime_sym = sp.diff(f_sym, x_sym)
+    x_sym = sp.Symbol("x")
+    try:
+        f_sym = sp.sympify(function_str)
+        f_prime_sym = sp.diff(f_sym, x_sym)
 
-    # Lambdify for numerical use
-    f = sp.lambdify(x_sym, f_sym, modules=["numpy"])
-    df_exact = sp.lambdify(x_sym, f_prime_sym, modules=["numpy"])
+        f = sp.lambdify(x_sym, f_sym, modules=["numpy"])
+        df_exact = sp.lambdify(x_sym, f_prime_sym, modules=["numpy"])
 
-    # Numerical estimation
-    derivative = central_difference(f, x_val, h)
-    exact = df_exact(x_val)
-    error = abs(derivative - exact)
+        derivative = central_difference(f, x_val, h)
+        exact = df_exact(x_val)
+        error = abs(derivative - exact)
 
-    # Display results
-    st.subheader("📊 Result")
-    st.write(f"**Function**: $f(x) = {sp.latex(f_sym)}$")
-    st.write(f"**Symbolic derivative**: $f'(x) = {sp.latex(f_prime_sym)}$")
-    st.write(f"**Estimated derivative at x = {x_val_input} ({x_unit})**: `{derivative:.6f}`")
-    st.write(f"**Exact derivative**: `{exact:.6f}`")
-    st.write(f"**Absolute error**: `{error:.6e}`")
+        results_img = get_image_base64(img_assets["results"]["path"])
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 30px;">
+            <img src="data:image/png;base64,{results_img}" width="35">
+            <h3 style="margin: 0;">Result</h3>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Visualization
-    st.subheader("📈 Function Plot")
+        st.write(f"**Function**: $f(x) = {sp.latex(f_sym)}$")
+        st.write(f"**Symbolic derivative**: $f'(x) = {sp.latex(f_prime_sym)}$")
+        st.write(f"**Estimated derivative at x = {x_val_input} ({x_unit}) using Central Difference:** `{derivative:.6f}`")
+        st.write(f"**Exact derivative at x = {x_val_input} ({x_unit}):** `{exact:.6f}`")
+        st.write(f"**Absolute error**: `{error:.6e}`")
 
-    # Plot range fixed from -3 to 3, centered at 0
-    x_vals = np.linspace(-3, 3, 300)
-    y_vals = f(x_vals)
+        plot_img = get_image_base64(img_assets["plot"]["path"])
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 30px;">
+            <img src="data:image/png;base64,{plot_img}" width="35">
+            <h3 style="margin: 0;">Function Plot</h3>
+        </div>
+        """, unsafe_allow_html=True)
 
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(x_vals, y_vals, label="f(x)")
+        x_vals = np.linspace(x_val - 1.5, x_val + 1.5, 300)
+        y_vals = f(x_vals)
 
-    # Highlight the input x point
-    ax.plot(x_val, f(x_val), 'ro', label=f"x = {x_val_input}")
+        y0 = f(x_val)
+        tangent_line = derivative * (x_vals - x_val) + y0
 
-    # Vertical line at 0
-    ax.axvline(0, color='gray', linestyle='--', linewidth=0.8)
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(x_vals, y_vals, label="f(x)", linewidth=2)
+        ax.plot(x_vals, tangent_line, 'r--', label="Central Diff Tangent", linewidth=1.8)
+        ax.plot(x_val, y0, 'ro', label=f"x = {x_val_input}")
+        ax.axvline(0, color='gray', linestyle='--', linewidth=0.8)
 
-    ax.set_title("Function Around x = 0")
-    ax.set_xlabel("x")
-    ax.set_ylabel("f(x)")
-    ax.legend()
-    st.pyplot(fig)
+        ax.set_title("Function and Tangent Line at x")
+        ax.set_xlabel("x")
+        ax.set_ylabel("f(x)")
+        ax.legend()
+        st.pyplot(fig)
 
-except Exception as e:
-    st.error(f"⚠️ Error: {e}")
+    except Exception as e:
+        st.error(f"⚠️ Error: {e}")
+else:
+    st.info("Please enter the function and the point x to see results.")
