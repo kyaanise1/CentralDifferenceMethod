@@ -73,9 +73,13 @@ def central_difference(f, x, h):
 function_str = st.text_input("Enter the function f(x):", value="")
 x_unit = st.radio("Select the unit of x:", ["Radians", "Degrees"], horizontal=True)
 x_val_str = st.text_input("Enter the point x (e.g., pi/2, 1.57, 180):", value="")
-h = st.number_input("Enter the step size h:", value=0.01, format="%.5f")
+h = st.number_input("Enter the step size h:", value=0.0, format="%.5f")
 
 if function_str.strip() and x_val_str.strip():
+    if h == 0.0:
+        st.warning("⚠️ Please enter a non-zero step size `h`.")
+        st.stop()
+
     try:
         x_val_input = eval(x_val_str, {"np": np, "math": math, "pi": np.pi})
         x_val = np.radians(x_val_input) if x_unit == "Degrees" else x_val_input
@@ -127,7 +131,7 @@ if function_str.strip() and x_val_str.strip():
         ax.plot(x_vals, y_vals, label="f(x)", linewidth=2)
         ax.plot(x_vals, tangent_line, 'r--', label="Central Diff Tangent", linewidth=1.8)
         ax.plot(x_val, y0, 'ro', label=f"x = {x_val_input}")
-        ax.axvline(0, color='gray', linestyle='--', linewidth=0.8)
+        # Removed vertical line at x = 0
 
         ax.set_title("Function and Tangent Line at x")
         ax.set_xlabel("x")
@@ -135,7 +139,19 @@ if function_str.strip() and x_val_str.strip():
         ax.legend()
         st.pyplot(fig)
 
+        # ✅ Summary table at the bottom
+        st.markdown("### 🖋️ Summary")
+        st.markdown(f"""
+        | Quantity                      | Value |
+        |------------------------------|-------|
+        | Function                     | $f(x) = {sp.latex(f_sym)}$ |
+        | Symbolic Derivative          | $f'(x) = {sp.latex(f_prime_sym)}$ |
+        | Central Difference Estimate  | `{derivative:.6f}` |
+        | Exact Derivative             | `{exact:.6f}` |
+        | Absolute Error               | `{error:.6e}` |
+        """, unsafe_allow_html=True)
+
     except Exception as e:
         st.error(f"⚠️ Error: {e}")
 else:
-    st.info("Please enter the function and the point x to see results.")
+    st.info("Please enter the function, point x, and non-zero step size h to see results.")
